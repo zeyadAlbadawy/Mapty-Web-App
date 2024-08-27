@@ -11,107 +11,120 @@ const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
 const btn = document.querySelector('.form__btn');
-let mapEvent, map;
 
-navigator.geolocation.getCurrentPosition(
-  function (position) {
+class workout {
+  id = (Date.now() + '').slice(-10);
+  date = new Date().toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+  });
+  constructor(distance, duration, coords) {
+    this.distance = distance;
+    this.duration = duration;
+    this.coords = coords;
+  }
+}
+
+class Running extends workout {
+  constructor(distance, duration, coords, cadence) {
+    super(distance, duration, coords);
+    this.cadence = cadence;
+    this.calcPace();
+  }
+
+  calcPace() {
+    this.pace = this.duration / this.distance;
+    return this.pace;
+  }
+}
+
+class Cycling extends workout {
+  constructor(distance, duration, coords, elevationGain) {
+    super(distance, duration, coords);
+    this.elevationGain = elevationGain;
+    this.calcSpeed();
+  }
+
+  calcSpeed() {
+    this.speed = this.distance / this.duration;
+    return this.speed;
+  }
+}
+
+class App {
+  #map;
+  #mapEvent;
+  constructor() {
+    this._getPosition();
+    inputType.addEventListener('change', this._toogleElevationField);
+    form.addEventListener('submit', this._newWorkout.bind(this));
+  }
+
+  _getPosition() {
+    navigator.geolocation.getCurrentPosition(
+      this._loadMap.bind(this),
+      function () {
+        alert(`Unable to get your position`);
+      }
+    );
+  }
+
+  _loadMap(position) {
     const latitude = position.coords.latitude;
     const longitude = position.coords.longitude;
     const coords = [latitude, longitude];
-    map = L.map('map').setView(coords, 13);
+    this.#map = L.map('map').setView(coords, 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    }).addTo(map);
+    }).addTo(this.#map);
 
-    ////////////////////////
-
-    map.on('click', function (e) {
-      mapEvent = e;
-      form.classList.remove('hidden');
-      inputDistance.focus();
-
-      ///////////////////////////////////////////// Handle the clicking
-    });
-  },
-  function () {
-    alert(`Unable to get your position`);
+    this.#map.on('click', this._showForm.bind(this));
   }
-);
 
-form.addEventListener('submit', function (e) {
-  e.preventDefault();
+  _showForm(e) {
+    this.#mapEvent = e;
+    form.classList.remove('hidden');
+    inputDistance.focus();
+  }
+  _toogleElevationField() {
+    inputElevation.closest('.form__row').classList.toggle('form__row--hidden');
+    inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
+  }
 
-  const selectElement = document.getElementById('activityType').value;
+  _newWorkout(e) {
+    e.preventDefault();
+    // 1) Get The Data From The Form
 
-  // const type = inputType.value;
+    // 2) Check If The Data is valid
 
-  // Creating the date of the event
-  const today = new Date();
-  const options = { month: 'long', day: 'numeric' };
-  const formattedDate = today.toLocaleDateString('en-US', options);
+    // 3) if the workout is running create running object
 
-  // Adding this new Event to the side list
-  form.insertAdjacentHTML(
-    'afterend',
-    `${selectElement}<li class="workout workout--${selectElement}" data-id="1234567890">
-      <h2 class="workout__title">${
-        selectElement == 'running' ? 'Running' : 'Cycling'
-      } on ${formattedDate}</h2>
-      <div class="workout__details">
-        <span class="workout__icon">${
-          selectElement == 'running' ? '🏃‍♂️' : '🚴‍♀️'
-        }</span>
-        <span class="workout__value">${inputDistance.value}</span>
-        <span class="workout__unit">km</span>
-      </div>
-      <div class="workout__details">
-        <span class="workout__icon">⏱</span>
-        <span class="workout__value">${inputDuration.value}</span>
-        <span class="workout__unit">min</span>
-      </div>
-      <div class="workout__details">
-        <span class="workout__icon">⚡️</span>
-        <span class="workout__value">4.6</span>
-        <span class="workout__unit"> ${
-          selectElement == 'running' ? 'min/km' : 'km/h'
-        }</span>
-      </div>
-      <div class="workout__details">
-     
-        <span class="workout__icon">${
-          selectElement == 'running' ? '🦶🏼' : '⛰'
-        }</span>
-        <span class="workout__value">${inputCadence.value}</span>
-        <span class="workout__unit">${
-          selectElement == 'running' ? 'spm' : 'm'
-        }</span>
-      </div>
-    </li>`
-  );
+    // 4) Otherwise if the workout is cycling create cycling object
 
-  // Display the marker
-  inputDistance.value = '';
-  inputDuration.value = '';
-  inputCadence.value = '';
-  const { lat, lng } = mapEvent.latlng;
-  L.marker([lat, lng])
-    .addTo(map)
-    .bindPopup(
-      L.popup({
-        maxWidth: 250,
-        minWidth: 100,
-        autoClose: false,
-        closeOnClick: false,
-        className: `${selectElement}-popup`,
-      })
-    )
-    .setPopupContent('Rendering Wotkout!')
-    .openPopup();
-});
+    // 5) Add This new created object to the workout array
 
-inputType.addEventListener('change', function () {
-  inputElevation.closest('.form__row').classList.toggle('form__row--hidden');
-  inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
-});
+    // 6) Render This Workout in map as a marker
+    const { lat, lng } = this.#mapEvent.latlng;
+    L.marker([lat, lng])
+      .addTo(this.#map)
+      .bindPopup(
+        L.popup({
+          maxWidth: 250,
+          minWidth: 100,
+          autoClose: false,
+          closeOnClick: false,
+          // className: `${selectElement}-popup`,
+        })
+      )
+      .setPopupContent('Rendering Wotkout!')
+      .openPopup();
+  }
+
+  // 7) Render This Workout in the list
+
+  // 8) Empty the field input and hide the form
+}
+
+const app = new App();
