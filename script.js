@@ -30,6 +30,7 @@ class Running extends workout {
     super(distance, duration, coords);
     this.cadence = cadence;
     this.calcPace();
+    this.type = 'running';
   }
 
   calcPace() {
@@ -43,6 +44,7 @@ class Cycling extends workout {
     super(distance, duration, coords);
     this.elevationGain = elevationGain;
     this.calcSpeed();
+    this.type = 'cycling';
   }
 
   calcSpeed() {
@@ -54,7 +56,9 @@ class Cycling extends workout {
 class App {
   #map;
   #mapEvent;
+  #workouts;
   constructor() {
+    this.#workouts = [];
     this._getPosition();
     inputType.addEventListener('change', this._toogleElevationField);
     form.addEventListener('submit', this._newWorkout.bind(this));
@@ -95,19 +99,59 @@ class App {
 
   _newWorkout(e) {
     e.preventDefault();
+    const positiveChecker = (...inputs) => inputs.every(input => input > 0);
+    const finiteChecker = (...inputs) =>
+      inputs.every(inp => Number.isFinite(inp));
     // 1) Get The Data From The Form
+    let distance = +inputDistance.value;
+    let duration = +inputDuration.value;
+    let type = inputType.value;
+    const { lat, lng } = this.#mapEvent.latlng;
 
+    console.log(type);
     // 2) Check If The Data is valid
 
     // 3) if the workout is running create running object
+    let newWorkout;
+    if (type === 'running') {
+      let cadence = +inputCadence.value;
+      if (
+        !finiteChecker(distance, duration, cadence) ||
+        !positiveChecker(distance, duration)
+      )
+        return alert('The Values Must Be Greater than Zero!');
 
-    // 4) Otherwise if the workout is cycling create cycling object
+      newWorkout = new Running(distance, duration, [lat, lng], cadence);
+    }
 
+    if (type == 'cycling') {
+      let elevation = +inputElevation.value;
+      if (
+        !finiteChecker(distance, duration, elevation) ||
+        !positiveChecker(distance, duration)
+      ) {
+        return alert('The Values Must Be Greater than Zero!');
+      }
+      // 4) Otherwise if the workout is cycling create cycling object
+      newWorkout = new Cycling(distance, duration, [lat, lng], elevation);
+    }
     // 5) Add This new created object to the workout array
-
+    this.#workouts.push(newWorkout);
+    console.log(newWorkout);
     // 6) Render This Workout in map as a marker
-    const { lat, lng } = this.#mapEvent.latlng;
-    L.marker([lat, lng])
+
+    // 7) Render This Workout in the list
+    this.renderMarker(newWorkout);
+    // 8) Empty the field input and hide the form
+    inputCadence.value =
+      inputDistance.value =
+      inputDuration.value =
+      inputElevation.value =
+        '';
+  }
+
+  renderMarker(newWorkout) {
+    L.marker(newWorkout.coords)
       .addTo(this.#map)
       .bindPopup(
         L.popup({
@@ -115,16 +159,12 @@ class App {
           minWidth: 100,
           autoClose: false,
           closeOnClick: false,
-          // className: `${selectElement}-popup`,
+          className: `${newWorkout.type}-popup`,
         })
       )
       .setPopupContent('Rendering Wotkout!')
       .openPopup();
   }
-
-  // 7) Render This Workout in the list
-
-  // 8) Empty the field input and hide the form
 }
 
 const app = new App();
