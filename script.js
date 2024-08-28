@@ -130,6 +130,11 @@ class App {
         !finiteChecker(distance, duration, elevation) ||
         !positiveChecker(distance, duration)
       ) {
+        inputCadence.value =
+          inputDistance.value =
+          inputDuration.value =
+          inputElevation.value =
+            '';
         return alert('The Values Must Be Greater than Zero!');
       }
       // 4) Otherwise if the workout is cycling create cycling object
@@ -139,18 +144,19 @@ class App {
     this.#workouts.push(newWorkout);
     console.log(newWorkout);
     // 6) Render This Workout in map as a marker
-
+    this._renderListWorkout(newWorkout);
     // 7) Render This Workout in the list
-    this.renderMarker(newWorkout);
+    this._renderMarker(newWorkout);
     // 8) Empty the field input and hide the form
     inputCadence.value =
       inputDistance.value =
       inputDuration.value =
       inputElevation.value =
         '';
+    this._hideForm(newWorkout);
   }
 
-  renderMarker(newWorkout) {
+  _renderMarker(newWorkout) {
     L.marker(newWorkout.coords)
       .addTo(this.#map)
       .bindPopup(
@@ -162,8 +168,68 @@ class App {
           className: `${newWorkout.type}-popup`,
         })
       )
-      .setPopupContent('Rendering Wotkout!')
+      .setPopupContent(
+        `${newWorkout.type == 'running' ? '🏃‍♂️ Running on ' : '🚴‍♀️ Cycling on'} ${
+          newWorkout.date
+        } `
+      )
       .openPopup();
+  }
+
+  _renderListWorkout(newWorkout) {
+    form.insertAdjacentHTML(
+      'afterend',
+      `<li class="workout workout--${newWorkout.type}" data-id="${
+        newWorkout.id
+      }">
+          <h2 class="workout__title">${
+            newWorkout.type == 'running' ? 'Running' : 'Cycling'
+          } on ${newWorkout.date}</h2>
+          <div class="workout__details">
+            <span class="workout__icon">${
+              newWorkout.type == 'running' ? '🏃‍♂️' : '🚴‍♀️'
+            }</span>
+            <span class="workout__value">${newWorkout.distance}</span>
+            <span class="workout__unit">km</span>
+          </div>
+          <div class="workout__details">
+            <span class="workout__icon">⏱</span>
+            <span class="workout__value">${newWorkout.duration}</span>
+            <span class="workout__unit">min</span>
+          </div>
+          <div class="workout__details">
+            <span class="workout__icon">⚡️</span>
+            <span class="workout__value">${
+              newWorkout.type == 'running'
+                ? newWorkout.pace.toFixed(1)
+                : newWorkout.speed.toFixed(1)
+            }</span>
+            <span class="workout__unit"> ${
+              newWorkout.type == 'running' ? 'min/km' : 'km/h'
+            }</span>
+          </div>
+          <div class="workout__details">
+         
+            <span class="workout__icon">${
+              newWorkout.type == 'running' ? '🦶🏼' : '⛰'
+            }</span>
+            <span class="workout__value">${
+              newWorkout.type == 'running'
+                ? newWorkout.cadence
+                : newWorkout.elevationGain
+            }</span>
+            <span class="workout__unit">${
+              newWorkout.type == 'running' ? 'spm' : 'm'
+            }</span>
+          </div>
+        </li>`
+    );
+  }
+
+  _hideForm(newWorkout) {
+    form.style.display = 'none';
+    form.classList.add('hidden');
+    setTimeout(() => (form.style.display = 'grid'), 1000);
   }
 }
 
