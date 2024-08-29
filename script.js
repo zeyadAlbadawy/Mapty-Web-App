@@ -59,7 +59,12 @@ class App {
   #workouts;
   constructor() {
     this.#workouts = [];
+    this._renderListFromLocalStorage();
     this._getPosition();
+    containerWorkouts.addEventListener(
+      'click',
+      this._movePositionToMarker.bind(this)
+    );
     inputType.addEventListener('change', this._toogleElevationField);
     form.addEventListener('submit', this._newWorkout.bind(this));
   }
@@ -85,6 +90,8 @@ class App {
     }).addTo(this.#map);
 
     this.#map.on('click', this._showForm.bind(this));
+
+    this.#workouts.forEach(dt => this._renderMarker(dt));
   }
 
   _showForm(e) {
@@ -142,7 +149,6 @@ class App {
     }
     // 5) Add This new created object to the workout array
     this.#workouts.push(newWorkout);
-    console.log(newWorkout);
     // 6) Render This Workout in map as a marker
     this._renderListWorkout(newWorkout);
     // 7) Render This Workout in the list
@@ -154,6 +160,7 @@ class App {
       inputElevation.value =
         '';
     this._hideForm(newWorkout);
+    this._storeInLocalStorage();
   }
 
   _renderMarker(newWorkout) {
@@ -230,6 +237,31 @@ class App {
     form.style.display = 'none';
     form.classList.add('hidden');
     setTimeout(() => (form.style.display = 'grid'), 1000);
+  }
+
+  _movePositionToMarker(e) {
+    const workoutElmnt = e.target.closest('.workout');
+    if (!workoutElmnt) return;
+    const targettedid = workoutElmnt.dataset.id;
+    const targettedworkout = this.#workouts.find(
+      work => work.id == targettedid
+    );
+
+    this.#map.setView(targettedworkout.coords, 13, {
+      animate: true,
+      pan: { duration: 1 },
+    });
+  }
+
+  _storeInLocalStorage() {
+    localStorage.setItem('workouts', JSON.stringify(this.#workouts));
+  }
+
+  _renderListFromLocalStorage() {
+    const data = JSON.parse(localStorage.getItem('workouts'));
+    if (!data) return;
+    this.#workouts = data;
+    data.forEach(dt => this._renderListWorkout(dt));
   }
 }
 
