@@ -11,6 +11,7 @@ const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
 const btn = document.querySelector('.form__btn');
+const deleteAllBtn = document.querySelector('.delete-all-button');
 
 class workout {
   id = (Date.now() + '').slice(-10);
@@ -67,6 +68,7 @@ class App {
     );
     inputType.addEventListener('change', this._toogleElevationField);
     form.addEventListener('submit', this._newWorkout.bind(this));
+    deleteAllBtn.addEventListener('click', this._reset);
   }
 
   _getPosition() {
@@ -229,7 +231,8 @@ class App {
               newWorkout.type == 'running' ? 'spm' : 'm'
             }</span>
           </div>
-        </li>`
+        </li>
+        `
     );
   }
 
@@ -262,6 +265,15 @@ class App {
     if (!data) return;
     this.#workouts = data;
     data.forEach(dt => this._renderListWorkout(dt));
+  }
+  _reset() {
+    const confirmed = window.confirm(
+      'Are you sure you want to delete all workouts?'
+    );
+    if (confirmed) {
+      localStorage.removeItem('workouts');
+      location.reload();
+    }
   }
 }
 
