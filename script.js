@@ -12,6 +12,7 @@ const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
 const btn = document.querySelector('.form__btn');
 const deleteAllBtn = document.querySelector('.delete-all-button');
+const specificDelete = document.querySelector('.targettedDelete');
 
 class workout {
   id = (Date.now() + '').slice(-10);
@@ -68,7 +69,11 @@ class App {
     );
     inputType.addEventListener('change', this._toogleElevationField);
     form.addEventListener('submit', this._newWorkout.bind(this));
-    deleteAllBtn.addEventListener('click', this._reset);
+    deleteAllBtn.addEventListener('click', this._reset.bind(this));
+    containerWorkouts.addEventListener(
+      'click',
+      this._deleteSpecificWorkout.bind(this)
+    );
   }
 
   _getPosition() {
@@ -191,6 +196,9 @@ class App {
       `<li class="workout workout--${newWorkout.type}" data-id="${
         newWorkout.id
       }">
+      <i class="fa fa-trash targettedDelete" aria-hidden="true" data-id="${
+        newWorkout.id
+      }"></i>
           <h2 class="workout__title">${
             newWorkout.type == 'running' ? 'Running' : 'Cycling'
           } on ${newWorkout.date}</h2>
@@ -231,6 +239,7 @@ class App {
               newWorkout.type == 'running' ? 'spm' : 'm'
             }</span>
           </div>
+          
         </li>
         `
     );
@@ -275,6 +284,22 @@ class App {
       location.reload();
     }
   }
+  _deleteSpecificWorkout(e) {
+    if (e.target.classList.contains('targettedDelete')) {
+      const targettedId = e.target.dataset.id;
+      const deletedWorkout = this.#workouts.find(
+        work => work.id === targettedId
+      );
+      const deletedWorkoutElmnt = e.target.closest('.workout');
+      deletedWorkoutElmnt.display = 'none';
+      this.#workouts.pop(deletedWorkout);
+      this._storeInLocalStorage();
+      location.reload();
+    }
+  }
 }
 
 const app = new App();
+
+// Change the color of delete
+// make the delete btn at the left!

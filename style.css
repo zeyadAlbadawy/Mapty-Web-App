@@ -19,18 +19,27 @@ html {
   font-size: 62.5%;
   box-sizing: border-box;
 }
-
-button {
-  width: 150px;
-  height: 50px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  background: red;
+/* Center the "Delete All" button */
+.delete-all-button {
+  display: block;
+  margin: 0 auto;
+  background-color: #4caf50; /* Green color */
+  color: white;
   border: none;
+  padding: 10px 20px;
+  width: 300px;
+  font-size: 16px;
   border-radius: 5px;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.15);
-  background: #e62222;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.delete-all-button:hover {
+  background-color: #45a049; /* Slightly darker green on hover */
+}
+.workout .fa-trash {
+  margin-left: 0px; /* Adjust as needed */
+  color: #c41b1b; /* Red color for the trash icon */
 }
 
 body {
